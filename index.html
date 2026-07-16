@@ -1,229 +1,418 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Calendario Compartido sin BD</title>
-    <style>
-        :root {
-            --bg: #0f172a;
-            --card: #1e293b;
-            --primary: #3b82f6;
-            --primary-hover: #2563eb;
-            --text: #f8fafc;
-            --border: #334155;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendario de Actividades y Comisiones</title>
+  <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-main: #2d3748;
+      --text-muted: #718096;
+      --border-color: #e2e8f0;
+      --primary: #4a5568;
+      
+      /* Colores de acento para meses */
+      --color-august: #dd6b20;
+      --color-september: #38a169;
+      --color-october: #805ad5;
+      --color-november: #d69e2e;
+      --color-december: #3182ce;
+    }
 
-        body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            background-color: var(--bg);
-            color: var(--text);
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            justify-content: center;
-        }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+    }
 
-        .container {
-            max-width: 700px;
-            width: 100%;
-            background: var(--card);
-            padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
-        }
+    .dashboard {
+      max-width: 1100px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 30px;
+    }
 
-        h1 { text-align: center; color: #60a5fa; margin-top: 0; }
+    @media (max-width: 900px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+    }
 
-        .share-section {
-            background: #1e293b;
-            border: 2px dashed #3b82f6;
-            padding: 15px;
-            border-radius: 10px;
-            margin-bottom: 25px;
-            text-align: center;
-        }
+    /* COLUMNA IZQUIERDA: COMISIONES */
+    .sidebar {
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      height: fit-content;
+      border: 1px solid var(--border-color);
+    }
 
-        .task-form {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr auto;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
+    .sidebar h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 20px;
+      color: var(--text-main);
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
 
-        input, button {
-            padding: 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-            background: #0f172a;
-            color: white;
-            font-size: 14px;
-        }
+    .commission-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
 
-        input:focus {
-            outline: 2px solid var(--primary);
-        }
+    .commission-item {
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--border-color);
+    }
 
-        button {
-            background: var(--primary);
-            font-weight: bold;
-            cursor: pointer;
-            border: none;
-            transition: 0.2s;
-        }
+    .commission-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
 
-        button:hover { background: var(--primary-hover); }
+    .commission-role {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
 
-        .btn-share {
-            background: #10b981;
-            width: 100%;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-        .btn-share:hover { background: #059669; }
+    .commission-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-main);
+    }
 
-        .task-list {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
+    /* COLUMNA DERECHA: CALENDARIO */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
 
-        .task-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #0f172a;
-            padding: 15px;
-            border-radius: 8px;
-            border: 1px solid var(--border);
-        }
+    .header {
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border-color);
+      text-align: left;
+    }
 
-        .task-item.completed .task-title {
-            text-decoration: line-through;
-            color: #64748b;
-        }
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      color: var(--text-main);
+      font-weight: 700;
+    }
 
-        .task-info { display: flex; flex-direction: column; gap: 4px; }
-        .task-title { font-weight: bold; font-size: 16px; }
-        .task-meta { font-size: 12px; color: #94a3b8; }
+    .header p {
+      margin: 5px 0 0;
+      color: var(--text-muted);
+      font-size: 15px;
+    }
 
-        .actions { display: flex; gap: 5px; }
-        .btn-action { padding: 6px 10px; font-size: 12px; }
-        .btn-del { background: #ef4444; }
-        .btn-del:hover { background: #dc2626; }
-    </style>
+    .month-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .month-title {
+      padding: 15px 25px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #ffffff;
+    }
+
+    /* Asignación de colores por mes */
+    .august { background-color: var(--color-august); }
+    .september { background-color: var(--color-september); }
+    .october { background-color: var(--color-october); }
+    .november { background-color: var(--color-november); }
+    .december { background-color: var(--color-december); }
+
+    .activities-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .activity {
+      padding: 15px 25px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
+    }
+
+    .activity:last-child {
+      border-bottom: none;
+    }
+
+    .activity:hover {
+      background-color: #fafbfe;
+    }
+
+    .activity-date {
+      font-weight: 700;
+      color: var(--text-main);
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+
+    .activity-details {
+      flex-grow: 1;
+      color: var(--text-main);
+      padding-right: 15px;
+    }
+
+    .activity-responsible {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: #edf2f7;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* Estilos destacados */
+    .highlight {
+      background-color: #f7fafc;
+    }
+    
+    .vacay {
+      background-color: #ebf8ff;
+    }
+    .vacay .activity-details {
+      color: #2b6cb0;
+      font-style: italic;
+    }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <h1>🗓️ Calendario Grupal URL</h1>
+  <div class="dashboard">
+    
+    <!-- SECCIÓN DE COMISIONES (IZQUIERDA) -->
+    <aside class="sidebar">
+      <h2>Comisiones</h2>
+      <div class="commission-list">
+        <div class="commission-item">
+          <span class="commission-role">Secretaria</span>
+          <span class="commission-name">Airam</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Tesorera</span>
+          <span class="commission-name">Erika</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Temas</span>
+          <span class="commission-name">Erika</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Dinámicas</span>
+          <span class="commission-name">Airam</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Misas</span>
+          <span class="commission-name">Axel</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Horas Santas</span>
+          <span class="commission-name">Sergio</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Flyers y propaganda</span>
+          <span class="commission-name">Damian</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Comedor</span>
+          <span class="commission-name">Airam</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Eventos especiales</span>
+          <span class="commission-name">Damian y Sergio</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Rifas</span>
+          <span class="commission-name">Axel</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Redes sociales</span>
+          <span class="commission-name">America</span>
+        </div>
+      </div>
+    </aside>
 
-    <div class="share-section">
-        <p style="margin: 0 0 10px 0; font-size: 14px; color: #94a3b8;">
-            Cada vez que hagas cambios, haz clic abajo para generar un nuevo enlace y compártelo con tu equipo.
-        </p>
-        <button class="btn-share" onclick="generateShareLink()">🔗 Copiar Enlace Actualizado</button>
-    </div>
+    <!-- SECCIÓN DE CALENDARIO (DERECHA) -->
+    <main class="main-content">
+      
+      <header class="header">
+        <h1>Calendario de Actividades</h1>
+        <p>Periodo Agosto - Diciembre</p>
+      </header>
 
-    <div class="task-form">
-        <input type="text" id="taskName" placeholder="¿Qué se hará?" required>
-        <input type="text" id="taskUser" placeholder="¿Quién?" required>
-        <input type="date" id="taskDate" required>
-        <button onclick="addTask()">+</button>
-    </div>
+      <!-- AGOSTO -->
+      <section class="month-card">
+        <div class="month-title august">Agosto</div>
+        <div class="activities-list">
+          <div class="activity">
+            <span class="activity-date">01 Ago</span>
+            <span class="activity-details">Cuarto Dia</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">08 Ago</span>
+            <span class="activity-details">Tema: ¿Quién soy?</span>
+            <span class="activity-responsible">Damian</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">15 Ago</span>
+            <span class="activity-details">Tema: Lo que me gusta y lo que me mueve</span>
+            <span class="activity-responsible">Sergio</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">22 Ago</span>
+            <span class="activity-details">Tema: Mis raíces, de dónde vengo</span>
+            <span class="activity-responsible">Erika</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">29 Ago</span>
+            <span class="activity-details">Subir el cerro (El arte de la amistad real)</span>
+            <span class="activity-responsible">América</span>
+          </div>
+        </div>
+      </section>
 
-    <div class="task-list" id="taskList"></div>
-</div>
+      <!-- SEPTIEMBRE -->
+      <section class="month-card">
+        <div class="month-title september">Septiembre</div>
+        <div class="activities-list">
+          <div class="activity">
+            <span class="activity-date">05 Sep</span>
+            <span class="activity-details">Tema: El valor de pertenecer</span>
+            <span class="activity-responsible">Axel</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">12 Sep</span>
+            <span class="activity-details">Servir sin esperar nada (Hora santa guiada)</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">19 Sep</span>
+            <span class="activity-details">Día deportivo</span>
+            <span class="activity-responsible">Damian</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">26 Sep</span>
+            <span class="activity-details">Limpieza y pintada de la fachada</span>
+            <span class="activity-responsible">Sergio</span>
+          </div>
+        </div>
+      </section>
 
-<script>
-    let tasks = [];
+      <!-- OCTUBRE -->
+      <section class="month-card">
+        <div class="month-title october">Octubre</div>
+        <div class="activities-list">
+          <div class="activity">
+            <span class="activity-date">03 Oct</span>
+            <span class="activity-details">Lo que me hizo quien soy</span>
+            <span class="activity-responsible">Airam</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">10 Oct</span>
+            <span class="activity-details">Día mundial de la salud (Tema por definir)</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">17 Oct</span>
+            <span class="activity-details">Fogata Juvenil</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">24 Oct</span>
+            <span class="activity-details">Tema de Halloween</span>
+            <span class="activity-responsible">Damian</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">31 Oct</span>
+            <span class="activity-details">Altar de muertos</span>
+            <span class="activity-responsible">Airam y Erika</span>
+          </div>
+        </div>
+      </section>
 
-    // 1. Cargar tareas desde la URL (si existen) al abrir la página
-    function loadTasksFromURL() {
-        const urlParams = new URLSearchParams(window.location.search);
-        const data = urlParams.get('data');
-        if (data) {
-            try {
-                // Desencriptamos la información de la URL de forma segura
-                tasks = JSON.parse(atob(data));
-            } catch (e) {
-                console.error("Error al leer los datos de la URL", e);
-                tasks = [];
-            }
-        }
-        render();
-    }
+      <!-- NOVIEMBRE -->
+      <section class="month-card">
+        <div class="month-title november">Noviembre</div>
+        <div class="activities-list">
+          <div class="activity">
+            <span class="activity-date">07 Nov</span>
+            <span class="activity-details">Escuchar de verdad</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">14 Nov</span>
+            <span class="activity-details">Lo que cargo sin decirle a nadie</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">21 Nov</span>
+            <span class="activity-details">Obra de caridad</span>
+            <span class="activity-responsible">Erika</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">28 Nov</span>
+            <span class="activity-details">Adviento: semana 1</span>
+          </div>
+        </div>
+      </section>
 
-    // 2. Renderizar tareas
-    function render() {
-        const container = document.getElementById('taskList');
-        container.innerHTML = '';
+      <!-- DICIEMBRE -->
+      <section class="month-card">
+        <div class="month-title december">Diciembre</div>
+        <div class="activities-list">
+          <div class="activity highlight">
+            <span class="activity-date">05 y 06 Dic</span>
+            <span class="activity-details">Retiro de adviento</span>
+            <span class="activity-responsible">Damian</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">12 Dic</span>
+            <span class="activity-details">La familia que tenemos y la que queremos</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">19 Dic</span>
+            <span class="activity-details">Posada de grupo</span>
+            <span class="activity-responsible">Sergio</span>
+          </div>
+          <div class="activity vacay">
+            <span class="activity-date">26 Dic</span>
+            <span class="activity-details">Periodo Vacacional</span>
+          </div>
+        </div>
+      </section>
 
-        tasks.sort((a,b) => new Date(a.date) - new Date(b.date));
+    </main>
+  </div>
 
-        if(tasks.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#64748b;">No hay eventos. Añade uno arriba.</p>';
-            return;
-        }
-
-        tasks.forEach((task, index) => {
-            const div = document.createElement('div');
-            div.className = `task-item ${task.completed ? 'completed' : ''}`;
-            
-            const dateObj = new Date(task.date + 'T00:00:00');
-            const formattedDate = dateObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
-
-            div.innerHTML = `
-                <div class="task-info">
-                    <span class="task-title">${task.text}</span>
-                    <span class="task-meta">📅 ${formattedDate} | 👤 ${task.user}</span>
-                </div>
-                <div class="actions">
-                    <button class="btn-action" onclick="toggleTask(${index})">✓</button>
-                    <button class="btn-action btn-del" onclick="deleteTask(${index})">🗑️</button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    function addTask() {
-        const text = document.getElementById('taskName').value;
-        const user = document.getElementById('taskUser').value;
-        const date = document.getElementById('taskDate').value;
-
-        if(!text || !user || !date) return alert('Llena todos los campos');
-
-        tasks.push({ text, user, date, completed: false });
-        render();
-
-        document.getElementById('taskName').value = '';
-        document.getElementById('taskUser').value = '';
-        document.getElementById('taskDate').value = '';
-    }
-
-    function toggleTask(index) {
-        tasks[index].completed = !tasks[index].completed;
-        render();
-    }
-
-    function deleteTask(index) {
-        tasks.splice(index, 1);
-        render();
-    }
-
-    // 3. Generar enlace con los datos encriptados en base64
-    function generateShareLink() {
-        const base64Data = btoa(JSON.stringify(tasks));
-        const newURL = `${window.location.origin}${window.location.pathname}?data=${base64Data}`;
-        
-        navigator.clipboard.writeText(newURL).then(() => {
-            alert('¡Enlace copiado al portapapeles! Envíalo a tu grupo para que vean los cambios.');
-        });
-    }
-
-    // Arrancar la app leyendo la URL
-    loadTasksFromURL();
-</script>
 </body>
 </html>
