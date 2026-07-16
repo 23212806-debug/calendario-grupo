@@ -216,7 +216,7 @@
             transform: translateY(-1px);
         }
 
-        /* --- FORMULARIO RESPONSIVO --- */
+        /* --- FORMULARIO --- */
         .task-form {
             background: var(--bg-secondary);
             padding: 18px;
@@ -233,6 +233,18 @@
             flex-direction: column;
             gap: 12px;
             width: 100%;
+        }
+
+        .form-row-three {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+
+        @media (min-width: 600px) {
+            .form-row-three {
+                grid-template-columns: 1.2fr 1fr 1fr;
+            }
         }
 
         .date-range {
@@ -266,12 +278,17 @@
             box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.1);
         }
 
+        /* Campo de línea discontinua para indicar que son opcionales */
+        .optional-input {
+            border-style: dashed;
+        }
+
         .btn-add {
             background: var(--primary);
             color: white;
             border: none;
-            padding: 12px;
-            font-size: 1rem;
+            padding: 14px;
+            font-size: 1.1rem;
             font-weight: 700;
             border-radius: 10px;
             cursor: pointer;
@@ -284,33 +301,6 @@
 
         .btn-add:hover {
             background: var(--primary-hover);
-        }
-
-        @media (min-width: 650px) {
-            .task-form {
-                flex-direction: row;
-                align-items: center;
-                padding: 15px;
-            }
-
-            .form-inputs {
-                flex-direction: row;
-                flex: 1;
-            }
-
-            .form-inputs input {
-                flex: 1.2;
-            }
-            
-            .form-inputs .date-range {
-                flex: 1.8;
-            }
-
-            .btn-add {
-                width: auto;
-                padding: 12px 20px;
-                font-size: 1.2rem;
-            }
         }
 
         /* --- LISTA DE TAREAS --- */
@@ -371,6 +361,24 @@
         .badge-user {
             background: rgba(185, 28, 28, 0.05);
             color: var(--primary);
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .badge-speaker {
+            background: rgba(21, 128, 61, 0.05);
+            color: var(--success);
+            padding: 2px 8px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+
+        .badge-games {
+            background: rgba(59, 130, 246, 0.05);
+            color: #2563eb;
             padding: 2px 8px;
             border-radius: 8px;
             font-weight: 600;
@@ -481,10 +489,6 @@
             <span class="commission-name">Airam</span>
         </div>
         <div class="commission-item">
-            <span class="commission-title">Eventos especiales</span>
-            <span class="commission-name">Damian y Sergio</span>
-        </div>
-        <div class="commission-item">
             <span class="commission-title">Rifas</span>
             <span class="commission-name">Axel</span>
         </div>
@@ -508,14 +512,25 @@
     <!-- Formulario Dinámico -->
     <div class="task-form">
         <div class="form-inputs">
-            <input type="text" id="taskName" placeholder="¿Qué se hará?" required>
-            <input type="text" id="taskUser" placeholder="¿Quién?" required>
+            <!-- Fila 1: Qué y Quién principal -->
+            <div class="form-row-three" style="grid-template-columns: 1.5fr 1fr;">
+                <input type="text" id="taskName" placeholder="¿Qué se hará?" required>
+                <input type="text" id="taskUser" placeholder="Coordinador / Responsable" required>
+            </div>
+            
+            <!-- Fila 2: Fecha Inicio y Fin -->
             <div class="date-range">
                 <input type="date" id="taskDateStart" required title="Fecha de inicio">
                 <input type="date" id="taskDateEnd" placeholder="Hasta (opcional)" title="Fecha de término (opcional)">
             </div>
+
+            <!-- Fila 3: Temista y Dinámicas (Opcionales) -->
+            <div class="form-row-three">
+                <input type="text" id="taskSpeaker" class="optional-input" placeholder="Temista (opcional)">
+                <input type="text" id="taskGames" class="optional-input" placeholder="Dinámicas por (opcional)">
+            </div>
         </div>
-        <button class="btn-add" onclick="addTask()">+</button>
+        <button class="btn-add" onclick="addTask()">+ Añadir</button>
     </div>
 
     <div class="task-list" id="taskList"></div>
@@ -524,7 +539,6 @@
 <script>
     let tasks = [];
 
-    // Función para abrir y cerrar el menú de comisiones
     function toggleMenu() {
         const sidebar = document.getElementById('sidebar');
         const overlay = document.getElementById('overlay');
@@ -572,12 +586,18 @@
                 displayDate += ` - ${formatDateString(task.dateEnd)}`;
             }
 
+            // Construcción dinámica de detalles opcionales (Temista y Dinámicas)
+            let speakerHTML = task.speaker ? `<span class="detail-item">🎤 <span class="badge-speaker">Tema: ${task.speaker}</span></span>` : '';
+            let gamesHTML = task.games ? `<span class="detail-item">🎮 <span class="badge-games">Dinámica: ${task.games}</span></span>` : '';
+
             div.innerHTML = `
                 <div class="task-content">
                     <span class="task-title">${task.text}</span>
                     <div class="task-details">
                         <span class="detail-item">📅 ${displayDate}</span>
                         <span class="detail-item">👤 <span class="badge-user">${task.user}</span></span>
+                        ${speakerHTML}
+                        ${gamesHTML}
                     </div>
                 </div>
                 <div class="actions">
@@ -594,9 +614,11 @@
         const user = document.getElementById('taskUser').value.trim();
         const dateStart = document.getElementById('taskDateStart').value;
         const dateEnd = document.getElementById('taskDateEnd').value;
+        const speaker = document.getElementById('taskSpeaker').value.trim();
+        const games = document.getElementById('taskGames').value.trim();
 
         if(!text || !user || !dateStart) {
-            alert('Por favor, completa los campos requeridos (Actividad, Quién y Fecha de inicio).');
+            alert('Por favor, completa los campos requeridos (Actividad, Responsable y Fecha de inicio).');
             return;
         }
 
@@ -605,14 +627,19 @@
             user, 
             dateStart, 
             dateEnd: dateEnd || null, 
+            speaker: speaker || null,
+            games: games || null,
             completed: false 
         });
         render();
 
+        // Limpiar formulario
         document.getElementById('taskName').value = '';
         document.getElementById('taskUser').value = '';
         document.getElementById('taskDateStart').value = '';
         document.getElementById('taskDateEnd').value = '';
+        document.getElementById('taskSpeaker').value = '';
+        document.getElementById('taskGames').value = '';
     }
 
     function toggleTask(index) {
@@ -632,9 +659,9 @@
         const newURL = `${window.location.origin}${window.location.pathname}?data=${base64Data}`;
         
         navigator.clipboard.writeText(newURL).then(() => {
-            alert('¡Enlace actualizado copiado con éxito! Envíalo por WhatsApp a tu grupo.');
+            alert('¡Enlace copiado con éxito! Compártelo por WhatsApp.');
         }).catch(() => {
-            alert('Error al copiar. Copia directamente la dirección de tu navegador.');
+            alert('Error al copiar el enlace automáticamente.');
         });
     }
 
