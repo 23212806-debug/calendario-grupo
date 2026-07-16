@@ -124,6 +124,16 @@
             width: 100%;
         }
 
+        .date-range {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .date-range input {
+            flex: 1;
+        }
+
         input {
             width: 100%;
             padding: 12px;
@@ -138,6 +148,11 @@
         input:focus {
             outline: none;
             border-color: var(--primary);
+        }
+
+        /* Indicador de campo opcional */
+        input[placeholder*="opcional"] {
+            border-style: dashed;
         }
 
         .btn-add {
@@ -170,7 +185,11 @@
             }
 
             .form-inputs input {
-                flex: 1;
+                flex: 1.2;
+            }
+            
+            .form-inputs .date-range {
+                flex: 1.8;
             }
 
             .btn-add {
@@ -313,8 +332,12 @@
         <div class="form-inputs">
             <input type="text" id="taskName" placeholder="¿Qué se hará?" required>
             <input type="text" id="taskUser" placeholder="¿Quién?" required>
-            <!-- Ahora es tipo text para permitir rangos de fechas de forma libre -->
-            <input type="text" id="taskDate" placeholder="Fecha (Ej: 12-15 Oct, Lunes...)" required>
+            <div class="date-range">
+                <!-- Fecha inicio (Obligatoria) -->
+                <input type="date" id="taskDateStart" required title="Fecha de inicio o único día">
+                <!-- Fecha fin (Opcional) -->
+                <input type="date" id="taskDateEnd" placeholder="Hasta (opcional)" title="Fecha de término (opcional para rangos)">
+            </div>
         </div>
         <button class="btn-add" onclick="addTask()">+</button>
     </div>
@@ -330,7 +353,6 @@
         const data = urlParams.get('data');
         if (data) {
             try {
-                // Desencriptación segura
                 tasks = JSON.parse(decodeURIComponent(escape(atob(data))));
             } catch (e) {
                 console.error("Error al leer los datos", e);
@@ -340,9 +362,19 @@
         render();
     }
 
+    // Formateador de fecha local amigable
+    function formatDateString(dateStr) {
+        if (!dateStr) return '';
+        const dateObj = new Date(dateStr + 'T00:00:00');
+        return dateObj.toLocaleDateString('es-ES', { weekday: 'short', day: 'numeric', month: 'short' });
+    }
+
     function render() {
         const container = document.getElementById('taskList');
         container.innerHTML = '';
+
+        // Ordenar por la fecha de inicio
+        tasks.sort((a,b) => new Date(a.dateStart) - new Date(b.dateStart));
 
         if(tasks.length === 0) {
             container.innerHTML = '<p class="empty-state">No hay actividades. Añade una arriba.</p>';
@@ -353,11 +385,17 @@
             const div = document.createElement('div');
             div.className = `task-item ${task.completed ? 'completed' : ''}`;
             
+            // Construir el texto de fecha (Rango o día único)
+            let displayDate = formatDateString(task.dateStart);
+            if (task.dateEnd && task.dateEnd !== task.dateStart) {
+                displayDate += ` - ${formatDateString(task.dateEnd)}`;
+            }
+
             div.innerHTML = `
                 <div class="task-content">
                     <span class="task-title">${task.text}</span>
                     <div class="task-details">
-                        <span class="detail-item">📅 ${task.date}</span>
+                        <span class="detail-item">📅 ${displayDate}</span>
                         <span class="detail-item">👤 <span class="badge-user">${task.user}</span></span>
                     </div>
                 </div>
@@ -373,19 +411,27 @@
     function addTask() {
         const text = document.getElementById('taskName').value.trim();
         const user = document.getElementById('taskUser').value.trim();
-        const date = document.getElementById('taskDate').value.trim();
+        const dateStart = document.getElementById('taskDateStart').value;
+        const dateEnd = document.getElementById('taskDateEnd').value;
 
-        if(!text || !user || !date) {
-            alert('Por favor, completa todos los campos.');
+        if(!text || !user || !dateStart) {
+            alert('Por favor, completa los campos requeridos (Actividad, Quién y Fecha de inicio).');
             return;
         }
 
-        tasks.push({ text, user, date, completed: false });
+        tasks.push({ 
+            text, 
+            user, 
+            dateStart, 
+            dateEnd: dateEnd || null, 
+            completed: false 
+        });
         render();
 
         document.getElementById('taskName').value = '';
         document.getElementById('taskUser').value = '';
-        document.getElementById('taskDate').value = '';
+        document.getElementById('taskDateStart').value = '';
+        document.getElementById('taskDateEnd').value = '';
     }
 
     function toggleTask(index) {
@@ -401,7 +447,6 @@
     }
 
     function generateShareLink() {
-        // Codificamos en UTF-8 y Base64 para que soporte acentos y caracteres especiales perfectamente
         const base64Data = btoa(unescape(encodeURIComponent(JSON.stringify(tasks))));
         const newURL = `${window.location.origin}${window.location.pathname}?data=${base64Data}`;
         
