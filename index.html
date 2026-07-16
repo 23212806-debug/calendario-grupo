@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendario de Actividades y Comisiones</title>
+  <style>
+    :root {
+      --bg-color: #f4f6f9;
+      --card-bg: #ffffff;
+      --text-main: #2d3748;
+      --text-muted: #718096;
+      --border-color: #e2e8f0;
+      --primary: #4a5568;
+      
+      /* Colores de acento para meses */
+      --color-august: #dd6b20;
+      --color-september: #38a169;
+      --color-october: #805ad5;
+      --color-november: #d69e2e;
+      --color-december: #3182ce;
+    }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-main);
+      margin: 0;
+      padding: 40px 20px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .dashboard {
+      max-width: 1100px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: 320px 1fr;
+      gap: 30px;
+    }
+
+    @media (max-width: 900px) {
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* COLUMNA IZQUIERDA: COMISIONES */
+    .sidebar {
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      height: fit-content;
+      border: 1px solid var(--border-color);
+    }
+
+    .sidebar h2 {
+      margin-top: 0;
+      margin-bottom: 20px;
+      font-size: 20px;
+      color: var(--text-main);
+      border-bottom: 2px solid var(--border-color);
+      padding-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .commission-list {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+    }
+
+    .commission-item {
+      display: flex;
+      flex-direction: column;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--border-color);
+    }
+
+    .commission-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .commission-role {
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      margin-bottom: 2px;
+    }
+
+    .commission-name {
+      font-size: 15px;
+      font-weight: 500;
+      color: var(--text-main);
+    }
+
+    /* COLUMNA DERECHA: CALENDARIO */
+    .main-content {
+      display: flex;
+      flex-direction: column;
+      gap: 25px;
+    }
+
+    .header {
+      background: var(--card-bg);
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border-color);
+      text-align: left;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 28px;
+      color: var(--text-main);
+      font-weight: 700;
+    }
+
+    .header p {
+      margin: 5px 0 0;
+      color: var(--text-muted);
+      font-size: 15px;
+    }
+
+    .month-card {
+      background: var(--card-bg);
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .month-title {
+      padding: 15px 25px;
+      font-weight: 700;
+      font-size: 18px;
+      color: #ffffff;
+    }
+
+    /* Asignación de colores por mes */
+    .august { background-color: var(--color-august); }
+    .september { background-color: var(--color-september); }
+    .october { background-color: var(--color-october); }
+    .november { background-color: var(--color-november); }
+    .december { background-color: var(--color-december); }
+
+    .activities-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .activity {
+      padding: 15px 25px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      transition: background-color 0.2s ease;
+    }
+
+    .activity:last-child {
+      border-bottom: none;
+    }
+
+    .activity:hover {
+      background-color: #fafbfe;
+    }
+
+    .activity-date {
+      font-weight: 700;
+      color: var(--text-main);
+      min-width: 80px;
+      flex-shrink: 0;
+    }
+
+    .activity-details {
+      flex-grow: 1;
+      color: var(--text-main);
+      padding-right: 15px;
+    }
+
+    .activity-responsible {
+      font-size: 12px;
+      color: var(--text-muted);
+      background: #edf2f7;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
+    /* Estilos destacados */
+    .highlight {
+      background-color: #f7fafc;
+    }
+    
+    .vacay {
+      background-color: #ebf8ff;
+    }
+    .vacay .activity-details {
+      color: #2b6cb0;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="dashboard">
+    
+    <!-- SECCIÓN DE COMISIONES (IZQUIERDA) -->
+    <aside class="sidebar">
+      <h2>Comisiones</h2>
+      <div class="commission-list">
+        <div class="commission-item">
+          <span class="commission-role">Secretaria</span>
+          <span class="commission-name">Airam</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Tesorera</span>
+          <span class="commission-name">Erika</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Temas</span>
+          <span class="commission-name">Erika</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Dinámicas</span>
+          <span class="commission-name">Airam</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Misas</span>
+          <span class="commission-name">Axel</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Horas Santas</span>
+          <span class="commission-name">Sergio</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Flyers y propaganda</span>
+          <span class="commission-name">Damian</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Comedor</span>
+          <span class="commission-name">Airam</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Eventos especiales</span>
+          <span class="commission-name">Damian y Sergio</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Rifas</span>
+          <span class="commission-name">Axel</span>
+        </div>
+        <div class="commission-item">
+          <span class="commission-role">Redes sociales</span>
+          <span class="commission-name">America</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- SECCIÓN DE CALENDARIO (DERECHA) -->
+    <main class="main-content">
+      
+      <header class="header">
+        <h1>Calendario de Actividades</h1>
+        <p>Periodo Agosto - Diciembre</p>
+      </header>
+
+      <!-- AGOSTO -->
+      <section class="month-card">
+        <div class="month-title august">Agosto</div>
+        <div class="activities-list">
+          <div class="activity">
+            <span class="activity-date">01 Ago</span>
+            <span class="activity-details">Cuarto Dia</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">08 Ago</span>
+            <span class="activity-details">Tema: ¿Quién soy?</span>
+            <span class="activity-responsible">Damian</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">15 Ago</span>
+            <span class="activity-details">Tema: Lo que me gusta y lo que me mueve</span>
+            <span class="activity-responsible">Sergio</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">22 Ago</span>
+            <span class="activity-details">Tema: Mis raíces, de dónde vengo</span>
+            <span class="activity-responsible">Erika</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">29 Ago</span>
+            <span class="activity-details">Subir el cerro (El arte de la amistad real)</span>
+            <span class="activity-responsible">América</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- SEPTIEMBRE -->
+      <section class="month-card">
+        <div class="month-title september">Septiembre</div>
+        <div class="activities-list">
+          <div class="activity">
+            <span class="activity-date">05 Sep</span>
+            <span class="activity-details">Tema: El valor de pertenecer</span>
+            <span class="activity-responsible">Axel</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">12 Sep</span>
+            <span class="activity-details">Servir sin esperar nada (Hora santa guiada)</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">19 Sep</span>
+            <span class="activity-details">Día deportivo</span>
+            <span class="activity-responsible">Damian</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">26 Sep</span>
+            <span class="activity-details">Limpieza y pintada de la fachada</span>
+            <span class="activity-responsible">Sergio</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- OCTUBRE -->
+      <section class="month-card">
+        <div class="month-title october">Octubre</div>
+        <div class="activities-list">
+          <div class="activity">
+            <span class="activity-date">03 Oct</span>
+            <span class="activity-details">Lo que me hizo quien soy</span>
+            <span class="activity-responsible">Airam</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">10 Oct</span>
+            <span class="activity-details">Día mundial de la salud (Tema por definir)</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">17 Oct</span>
+            <span class="activity-details">Fogata Juvenil</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">24 Oct</span>
+            <span class="activity-details">Tema de Halloween</span>
+            <span class="activity-responsible">Damian</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">31 Oct</span>
+            <span class="activity-details">Altar de muertos</span>
+            <span class="activity-responsible">Airam y Erika</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- NOVIEMBRE -->
+      <section class="month-card">
+        <div class="month-title november">Noviembre</div>
+        <div class="activities-list">
+          <div class="activity">
+            <span class="activity-date">07 Nov</span>
+            <span class="activity-details">Escuchar de verdad</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">14 Nov</span>
+            <span class="activity-details">Lo que cargo sin decirle a nadie</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">21 Nov</span>
+            <span class="activity-details">Obra de caridad</span>
+            <span class="activity-responsible">Erika</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">28 Nov</span>
+            <span class="activity-details">Adviento: semana 1</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- DICIEMBRE -->
+      <section class="month-card">
+        <div class="month-title december">Diciembre</div>
+        <div class="activities-list">
+          <div class="activity highlight">
+            <span class="activity-date">05 y 06 Dic</span>
+            <span class="activity-details">Retiro de adviento</span>
+            <span class="activity-responsible">Damian</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">12 Dic</span>
+            <span class="activity-details">La familia que tenemos y la que queremos</span>
+          </div>
+          <div class="activity">
+            <span class="activity-date">19 Dic</span>
+            <span class="activity-details">Posada de grupo</span>
+            <span class="activity-responsible">Sergio</span>
+          </div>
+          <div class="activity vacay">
+            <span class="activity-date">26 Dic</span>
+            <span class="activity-details">Periodo Vacacional</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+</body>
+</html>
